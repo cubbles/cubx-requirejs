@@ -1,6 +1,6 @@
 # cubx-requirejs
 
-RequireJS for use in Node. includes, modyfied for cubixx:
+RequireJS for use in Node. includes, modified for cubixx-platform:
 
 * r.js: the RequireJS optimizer, and AMD runtime for use in Node.
 * require.js: The browser-based AMD loader.

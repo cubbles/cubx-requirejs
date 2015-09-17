@@ -1,27 +1,22 @@
 {
   "name": "cubx-requirejs",
   "description": "Node adapter for RequireJS, for loading AMD modules. Includes RequireJS optimizer, modified for cubixx platform. based on requirejs version 2.1.20",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publishConfig": {
     "registry": "https://npm.webblebase.net:444"
   },
-  "author": {
+  "author":{
+    "name": "Judit Ross",
+    "email": "judit.ross@incowia.com"
+  },
+  "contributors": [{
     "name": "James Burke",
     "email": "jrburke@gmail.com",
     "url": "http://github.com/jrburke"
-  },
-  "contributors": [{
-    "name": "Judit Ross",
-    "email": "judit.ross@incowia.com"
   }],
   "licenses": [
     {
-      "type": "BSD",
-      "url": "https://github.com/jrburke/r.js/blob/master/LICENSE"
-    },
-    {
-      "type": "MIT",
-      "url": "https://github.com/jrburke/r.js/blob/master/LICENSE"
+      "type": "MIT"
     }
   ],
   "repository": {
