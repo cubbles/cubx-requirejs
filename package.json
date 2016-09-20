@@ -1,29 +1,23 @@
 {
   "name": "cubx-requirejs",
-  "description": "Node adapter for RequireJS, for loading AMD modules. Includes RequireJS optimizer, modified for cubixx platform. based on requirejs version 2.1.20",
-  "version": "1.0.2",
+  "description": "Node adapter for RequireJS, for loading AMD modules. Includes RequireJS optimizer, modified for cubbles platform. based on requirejs version 2.2.0",
+  "version": "1.1.2",
   "author": {
     "name": "Judit Ross",
     "email": "judit.ross@incowia.com"
   },
-  "contributors": [
-    {
-      "name": "James Burke",
-      "email": "jrburke@gmail.com",
-      "url": "http://github.com/jrburke"
-    }
-  ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/cubbles/cubx-requirejs.git"
   },
-  "main": "./bin/r.js",
-  "bin": {
-    "r.js": "./bin/r.js"
-  },
+  "main": "index.js",
+  "keywords": [
+    "requirejs",
+    "cubbles"
+  ],
   "engines": {
-    "node": ">=0.4.0"
+    "node": ">=4.0.0"
   },
   "scripts": {}
 }

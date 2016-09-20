@@ -1,7 +1,6 @@
 /** vim: et:ts=4:sw=4:sts=4
- * @license RequireJS 2.1.20 Copyright (c) 2010-2015, The Dojo Foundation All Rights Reserved.
- * Available via the MIT or new BSD license.
- * see: http://github.com/jrburke/requirejs for details
+ *
+ * Modified the original sources from https://github.com/requirejs/r.js for cubbes platform
  */
 //Not using strict: uneven strict support in browsers, #392, and causes
 //problems with requirejs.exec()/transpiler plugins that may not be strict.
@@ -16,11 +15,10 @@ var cubx = {
         define: undefined
     }
 };
-
-(function(global) {
+(function (global) {
     var req, s, head, baseElement, dataMain, src,
         interactiveScript, currentlyAddingScript, mainScript, subPath,
-        version = '2.1.20',
+        version = '2.2.0',
         commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg,
         cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
         jsSuffixRegExp = /\.js$/,
@@ -28,22 +26,26 @@ var cubx = {
         op = Object.prototype,
         ostring = op.toString,
         hasOwn = op.hasOwnProperty,
-        ap = Array.prototype,
         isBrowser = !!(typeof window !== 'undefined' && typeof navigator !== 'undefined' && window.document),
         isWebWorker = !isBrowser && typeof importScripts !== 'undefined',
-    //PS3 indicates loaded and complete, but need to wait for complete
-    //specifically. Sequence is 'loading', 'loaded', execution,
-    // then 'complete'. The UA check is unfortunate, but not sure how
-    //to feature test w/o causing perf issues.
+        //PS3 indicates loaded and complete, but need to wait for complete
+        //specifically. Sequence is 'loading', 'loaded', execution,
+        // then 'complete'. The UA check is unfortunate, but not sure how
+        //to feature test w/o causing perf issues.
         readyRegExp = isBrowser && navigator.platform === 'PLAYSTATION 3' ?
                       /^complete$/ : /^(complete|loaded)$/,
         defContextName = '_',
-    //Oh the tragedy, detecting opera. See the usage of isOpera for reason.
+        //Oh the tragedy, detecting opera. See the usage of isOpera for reason.
         isOpera = typeof opera !== 'undefined' && opera.toString() === '[object Opera]',
         contexts = {},
         cfg = {},
         globalDefQueue = [],
         useInteractive = false;
+
+    //Could match something like ')//comment', do not lose the prefix to comment.
+    function commentReplace(match, multi, multiText, singlePrefix) {
+        return singlePrefix || '';
+    }
 
     function isFunction(it) {
         return ostring.call(it) === '[object Function]';
@@ -113,10 +115,11 @@ var cubx = {
      */
     function mixin(target, source, force, deepStringMixin) {
         if (source) {
-            eachProp(source, function(value, prop) {
+            eachProp(source, function (value, prop) {
                 if (force || !hasProp(target, prop)) {
-                    if (deepStringMixin && typeof value === 'object' && value && !isArray(value) &&
-                        !isFunction(value) && !(value instanceof RegExp)) {
+                    if (deepStringMixin && typeof value === 'object' && value &&
+                        !isArray(value) && !isFunction(value) &&
+                        !(value instanceof RegExp)) {
 
                         if (!target[prop]) {
                             target[prop] = {};
@@ -134,7 +137,7 @@ var cubx = {
     //Similar to Function.prototype.bind, but the 'this' object is specified
     //first, since it is easier to read/figure out what 'this' will be.
     function bind(obj, fn) {
-        return function() {
+        return function () {
             return fn.apply(obj, arguments);
         };
     }
@@ -154,7 +157,7 @@ var cubx = {
             return value;
         }
         var g = global;
-        each(value.split('.'), function(part) {
+        each(value.split('.'), function (part) {
             g = g[part];
         });
         return g;
@@ -216,9 +219,9 @@ var cubx = {
                 config: {}
             },
             registry = {},
-        //registry of just enabled modules, to speed
-        //cycle breaking code when lots of modules
-        //are registered, but not activated.
+            //registry of just enabled modules, to speed
+            //cycle breaking code when lots of modules
+            //are registered, but not activated.
             enabledRegistry = {},
             undefEvents = {},
             defQueue = [],
@@ -361,9 +364,9 @@ var cubx = {
 
         function removeScript(name) {
             if (isBrowser) {
-                each(scripts(), function(scriptNode) {
+                each(scripts(), function (scriptNode) {
                     if (scriptNode.getAttribute('data-requiremodule') === name &&
-                        scriptNode.getAttribute('data-requirecontext') === context.contextName) {
+                            scriptNode.getAttribute('data-requirecontext') === context.contextName) {
                         scriptNode.parentNode.removeChild(scriptNode);
                         return true;
                     }
@@ -446,7 +449,7 @@ var cubx = {
                 if (prefix) {
                     if (pluginModule && pluginModule.normalize) {
                         //Plugin is loaded, use its normalize method.
-                        normalizedName = pluginModule.normalize(name, function(name) {
+                        normalizedName = pluginModule.normalize(name, function (name) {
                             return normalize(name, parentName, applyMap);
                         });
                     } else {
@@ -493,8 +496,8 @@ var cubx = {
                 originalName: originalName,
                 isDefine: isDefine,
                 id: (prefix ?
-                     prefix + '!' + normalizedName :
-                     normalizedName) + suffix
+                        prefix + '!' + normalizedName :
+                        normalizedName) + suffix
             };
         }
 
@@ -514,7 +517,7 @@ var cubx = {
                 mod = getOwn(registry, id);
 
             if (hasProp(defined, id) &&
-                (!mod || mod.defineEmitComplete)) {
+                    (!mod || mod.defineEmitComplete)) {
                 if (name === 'defined') {
                     fn(defined[id]);
                 }
@@ -535,7 +538,7 @@ var cubx = {
             if (errback) {
                 errback(err);
             } else {
-                each(ids, function(id) {
+                each(ids, function (id) {
                     var mod = getOwn(registry, id);
                     if (mod) {
                         //Set error on module, so it skips timeout checks.
@@ -572,14 +575,14 @@ var cubx = {
         }
 
         handlers = {
-            'require': function(mod) {
+            'require': function (mod) {
                 if (mod.require) {
                     return mod.require;
                 } else {
                     return (mod.require = context.makeRequire(mod.map));
                 }
             },
-            'exports': function(mod) {
+            'exports': function (mod) {
                 mod.usingExports = true;
                 if (mod.map.isDefine) {
                     if (mod.exports) {
@@ -589,14 +592,14 @@ var cubx = {
                     }
                 }
             },
-            'module': function(mod) {
+            'module': function (mod) {
                 if (mod.module) {
                     return mod.module;
                 } else {
                     return (mod.module = {
                         id: mod.map.id,
                         uri: mod.map.url,
-                        config: function() {
+                        config: function () {
                             return getOwn(config.config, mod.map.id) || {};
                         },
                         exports: mod.exports || (mod.exports = {})
@@ -618,7 +621,7 @@ var cubx = {
                 mod.emit('error', mod.error);
             } else {
                 traced[id] = true;
-                each(mod.depMaps, function(depMap, i) {
+                each(mod.depMaps, function (depMap, i) {
                     var depId = depMap.id,
                         dep = getOwn(registry, depId);
 
@@ -642,7 +645,7 @@ var cubx = {
         function checkLoaded() {
             var err, usingPathFallback,
                 waitInterval = config.waitSeconds * 1000,
-            //It is possible to disable the wait interval by using waitSeconds of 0.
+                //It is possible to disable the wait interval by using waitSeconds of 0.
                 expired = waitInterval && (context.startTime + waitInterval) < new Date().getTime(),
                 noLoads = [],
                 reqCalls = [],
@@ -657,7 +660,7 @@ var cubx = {
             inCheckLoaded = true;
 
             //Figure out the state of all the modules.
-            eachProp(enabledRegistry, function(mod) {
+            eachProp(enabledRegistry, function (mod) {
                 var map = mod.map,
                     modId = map.id;
 
@@ -704,7 +707,7 @@ var cubx = {
 
             //Not expired, check for a cycle.
             if (needCycleCheck) {
-                each(reqCalls, function(mod) {
+                each(reqCalls, function (mod) {
                     breakCycle(mod, {}, {});
                 });
             }
@@ -716,7 +719,7 @@ var cubx = {
                 //Something is still waiting to load. Wait for it, but only
                 //if a timeout is not already in effect.
                 if ((isBrowser || isWebWorker) && !checkLoadedTimeoutId) {
-                    checkLoadedTimeoutId = setTimeout(function() {
+                    checkLoadedTimeoutId = setTimeout(function () {
                         checkLoadedTimeoutId = 0;
                         checkLoaded();
                     }, 50);
@@ -726,7 +729,7 @@ var cubx = {
             inCheckLoaded = false;
         }
 
-        Module = function(map) {
+        Module = function (map) {
             this.events = getOwn(undefEvents, map.id) || {};
             this.map = map;
             this.shim = getOwn(config.shim, map.id);
@@ -737,13 +740,13 @@ var cubx = {
             this.depCount = 0;
 
             /* this.exports this.factory
-             this.depMaps = [],
-             this.enabled, this.fetched
-             */
+               this.depMaps = [],
+               this.enabled, this.fetched
+            */
         };
 
         Module.prototype = {
-            init: function(depMaps, factory, errback, options) {
+            init: function (depMaps, factory, errback, options) {
                 options = options || {};
 
                 //Do not do more inits if already done. Can happen if there
@@ -761,7 +764,7 @@ var cubx = {
                 } else if (this.events.error) {
                     //If no errback already, but there are error listeners
                     //on this module, set up an errback to pass to the deps.
-                    errback = bind(this, function(err) {
+                    errback = bind(this, function (err) {
                         this.emit('error', err);
                     });
                 }
@@ -793,7 +796,7 @@ var cubx = {
                 }
             },
 
-            defineDep: function(i, depExports) {
+            defineDep: function (i, depExports) {
                 //Because of cycles, defined callback for a given
                 //export can be called more than once.
                 if (!this.depMatched[i]) {
@@ -803,7 +806,7 @@ var cubx = {
                 }
             },
 
-            fetch: function() {
+            fetch: function () {
                 if (this.fetched) {
                     return;
                 }
@@ -818,7 +821,7 @@ var cubx = {
                 if (this.shim) {
                     context.makeRequire(this.map, {
                         enableBuildCallback: true
-                    })(this.shim.deps || [], bind(this, function() {
+                    })(this.shim.deps || [], bind(this, function () {
                         return map.prefix ? this.callPlugin() : this.load();
                     }));
                 } else {
@@ -827,7 +830,7 @@ var cubx = {
                 }
             },
 
-            load: function() {
+            load: function () {
                 var url = this.map.url;
 
                 //Regular dependency.
@@ -841,7 +844,7 @@ var cubx = {
              * Checks if the module is ready to define itself, and if so,
              * define it.
              */
-            check: function() {
+            check: function () {
                 if (!this.enabled || this.enabling) {
                     return;
                 }
@@ -916,7 +919,11 @@ var cubx = {
                             defined[id] = exports;
 
                             if (req.onResourceLoad) {
-                                req.onResourceLoad(context, this.map, this.depMaps);
+                                var resLoadMaps = [];
+                                each(this.depMaps, function (depMap) {
+                                    resLoadMaps.push(depMap.normalizedMap || depMap);
+                                });
+                                req.onResourceLoad(context, this.map, resLoadMaps);
                             }
                         }
 
@@ -940,17 +947,17 @@ var cubx = {
                 }
             },
 
-            callPlugin: function() {
+            callPlugin: function () {
                 var map = this.map,
                     id = map.id,
-                //Map already normalized the prefix.
+                    //Map already normalized the prefix.
                     pluginMap = makeModuleMap(map.prefix);
 
                 //Mark this as a dependency for this plugin, so it
                 //can be traced for cycles.
                 this.depMaps.push(pluginMap);
 
-                on(pluginMap, 'defined', bind(this, function(plugin) {
+                on(pluginMap, 'defined', bind(this, function (plugin) {
                     var load, normalizedMap, normalizedMod,
                         bundleId = getOwn(bundlesMap, this.map.id),
                         name = this.map.name,
@@ -964,20 +971,19 @@ var cubx = {
                     if (this.map.unnormalized) {
                         //Normalize the ID if the plugin allows it.
                         if (plugin.normalize) {
-                            name = plugin.normalize(name, function(name) {
-                                    return normalize(name, parentName, true);
-                                }) || '';
+                            name = plugin.normalize(name, function (name) {
+                                return normalize(name, parentName, true);
+                            }) || '';
                         }
 
                         //prefix and name should already be normalized, no need
                         //for applying map config again either.
                         normalizedMap = makeModuleMap(map.prefix + '!' + name,
-                            this.map.parentMap);
+                                                      this.map.parentMap);
                         on(normalizedMap,
-                            'defined', bind(this, function(value) {
-                                this.init([], function() {
-                                    return value;
-                                }, null, {
+                            'defined', bind(this, function (value) {
+                                this.map.normalizedMap = normalizedMap;
+                                this.init([], function () { return value; }, null, {
                                     enabled: true,
                                     ignore: true
                                 });
@@ -990,7 +996,7 @@ var cubx = {
                             this.depMaps.push(normalizedMap);
 
                             if (this.events.error) {
-                                normalizedMod.on('error', bind(this, function(err) {
+                                normalizedMod.on('error', bind(this, function (err) {
                                     this.emit('error', err);
                                 }));
                             }
@@ -1008,22 +1014,20 @@ var cubx = {
                         return;
                     }
 
-                    load = bind(this, function(value) {
-                        this.init([], function() {
-                            return value;
-                        }, null, {
+                    load = bind(this, function (value) {
+                        this.init([], function () { return value; }, null, {
                             enabled: true
                         });
                     });
 
-                    load.error = bind(this, function(err) {
+                    load.error = bind(this, function (err) {
                         this.inited = true;
                         this.error = err;
                         err.requireModules = [id];
 
                         //Remove temp unnormalized modules for this module,
                         //since they will never be resolved otherwise now.
-                        eachProp(registry, function(mod) {
+                        eachProp(registry, function (mod) {
                             if (mod.map.id.indexOf(id + '_unnormalized') === 0) {
                                 cleanRegistry(mod.map.id);
                             }
@@ -1034,7 +1038,7 @@ var cubx = {
 
                     //Allow plugins to load other code without having to know the
                     //context or how to 'complete' the load.
-                    load.fromText = bind(this, function(text, textAlt) {
+                    load.fromText = bind(this, function (text, textAlt) {
                         /*jslint evil: true */
                         var moduleName = map.name,
                             moduleMap = makeModuleMap(moduleName),
@@ -1067,10 +1071,10 @@ var cubx = {
                             req.exec(text);
                         } catch (e) {
                             return onError(makeError('fromtexteval',
-                                'fromText eval for ' + id +
-                                ' failed: ' + e,
-                                e,
-                                [id]));
+                                             'fromText eval for ' + id +
+                                            ' failed: ' + e,
+                                             e,
+                                             [id]));
                         }
 
                         if (hasInteractive) {
@@ -1099,7 +1103,7 @@ var cubx = {
                 this.pluginMaps[pluginMap.id] = pluginMap;
             },
 
-            enable: function() {
+            enable: function () {
                 enabledRegistry[this.map.id] = this;
                 this.enabled = true;
 
@@ -1110,16 +1114,16 @@ var cubx = {
                 this.enabling = true;
 
                 //Enable each dependency
-                each(this.depMaps, bind(this, function(depMap, i) {
+                each(this.depMaps, bind(this, function (depMap, i) {
                     var id, mod, handler;
 
                     if (typeof depMap === 'string') {
                         //Dependency needs to be converted to a depMap
                         //and wired up to this module.
                         depMap = makeModuleMap(depMap,
-                            (this.map.isDefine ? this.map : this.map.parentMap),
-                            false,
-                            !this.skipMap);
+                                               (this.map.isDefine ? this.map : this.map.parentMap),
+                                               false,
+                                               !this.skipMap);
                         this.depMaps[i] = depMap;
 
                         handler = getOwn(handlers, depMap.id);
@@ -1131,7 +1135,7 @@ var cubx = {
 
                         this.depCount += 1;
 
-                        on(depMap, 'defined', bind(this, function(depExports) {
+                        on(depMap, 'defined', bind(this, function (depExports) {
                             if (this.undefed) {
                                 return;
                             }
@@ -1164,7 +1168,7 @@ var cubx = {
 
                 //Enable each plugin that is used in
                 //a dependency
-                eachProp(this.pluginMaps, bind(this, function(pluginMap) {
+                eachProp(this.pluginMaps, bind(this, function (pluginMap) {
                     var mod = getOwn(registry, pluginMap.id);
                     if (mod && !mod.enabled) {
                         context.enable(pluginMap, this);
@@ -1176,7 +1180,7 @@ var cubx = {
                 this.check();
             },
 
-            on: function(name, cb) {
+            on: function (name, cb) {
                 var cbs = this.events[name];
                 if (!cbs) {
                     cbs = this.events[name] = [];
@@ -1184,8 +1188,8 @@ var cubx = {
                 cbs.push(cb);
             },
 
-            emit: function(name, evt) {
-                each(this.events[name], function(cb) {
+            emit: function (name, evt) {
+                each(this.events[name], function (cb) {
                     cb(evt);
                 });
                 if (name === 'error') {
@@ -1279,12 +1283,20 @@ var cubx = {
              * Set a configuration for the context.
              * @param {Object} cfg config object to integrate.
              */
-            configure: function(cfg) {
+            configure: function (cfg) {
                 //Make sure the baseUrl ends in a slash.
                 if (cfg.baseUrl) {
                     if (cfg.baseUrl.charAt(cfg.baseUrl.length - 1) !== '/') {
                         cfg.baseUrl += '/';
                     }
+                }
+
+                // Convert old style urlArgs string to a function.
+                if (typeof cfg.urlArgs === 'string') {
+                    var urlArgs = cfg.urlArgs;
+                    cfg.urlArgs = function(id, url) {
+                        return (url.indexOf('?') === -1 ? '?' : '&') + urlArgs;
+                    };
                 }
 
                 //Save off the paths since they require special processing,
@@ -1297,7 +1309,7 @@ var cubx = {
                         map: true
                     };
 
-                eachProp(cfg, function(value, prop) {
+                eachProp(cfg, function (value, prop) {
                     if (objs[prop]) {
                         if (!config[prop]) {
                             config[prop] = {};
@@ -1310,8 +1322,8 @@ var cubx = {
 
                 //Reverse map the bundles
                 if (cfg.bundles) {
-                    eachProp(cfg.bundles, function(value, prop) {
-                        each(value, function(v) {
+                    eachProp(cfg.bundles, function (value, prop) {
+                        each(value, function (v) {
                             if (v !== prop) {
                                 bundlesMap[v] = prop;
                             }
@@ -1321,7 +1333,7 @@ var cubx = {
 
                 //Merge shim
                 if (cfg.shim) {
-                    eachProp(cfg.shim, function(value, id) {
+                    eachProp(cfg.shim, function (value, id) {
                         //Normalize the structure
                         if (isArray(value)) {
                             value = {
@@ -1338,7 +1350,7 @@ var cubx = {
 
                 //Adjust packages if necessary.
                 if (cfg.packages) {
-                    each(cfg.packages, function(pkgObj) {
+                    each(cfg.packages, function (pkgObj) {
                         var location, name;
 
                         pkgObj = typeof pkgObj === 'string' ? {name: pkgObj} : pkgObj;
@@ -1355,15 +1367,15 @@ var cubx = {
                         //envs have different conventions: some use a module name,
                         //some use a file name.
                         config.pkgs[name] = pkgObj.name + '/' + (pkgObj.main || 'main')
-                                .replace(currDirRegExp, '')
-                                .replace(jsSuffixRegExp, '');
+                                     .replace(currDirRegExp, '')
+                                     .replace(jsSuffixRegExp, '');
                     });
                 }
 
                 //If there are any "waiting to execute" modules in the registry,
                 //update the maps for them, since their info, like URLs to load,
                 //may have changed.
-                eachProp(registry, function(mod, id) {
+                eachProp(registry, function (mod, id) {
                     //If module already has init called, since it is too
                     //late to modify them, and ignore unnormalized ones
                     //since they are transient.
@@ -1380,7 +1392,7 @@ var cubx = {
                 }
             },
 
-            makeShimExports: function(value) {
+            makeShimExports: function (value) {
                 function fn() {
                     var ret;
                     if (value.init) {
@@ -1388,11 +1400,10 @@ var cubx = {
                     }
                     return ret || (value.exports && getGlobal(value.exports));
                 }
-
                 return fn;
             },
 
-            makeRequire: function(relMap, options) {
+            makeRequire: function (relMap, options) {
                 options = options || {};
 
                 function localRequire(deps, callback, errback) {
@@ -1427,10 +1438,10 @@ var cubx = {
 
                         if (!hasProp(defined, id)) {
                             return onError(makeError('notloaded', 'Module name "' +
-                                id +
-                                '" has not been loaded yet for context: ' +
-                                contextName +
-                                (relMap ? '' : '. Use require([])')));
+                                        id +
+                                        '" has not been loaded yet for context: ' +
+                                        contextName +
+                                        (relMap ? '' : '. Use require([])')));
                         }
                         return defined[id];
                     }
@@ -1439,7 +1450,7 @@ var cubx = {
                     intakeDefines();
 
                     //Mark all the dependencies as needing to be loaded.
-                    context.nextTick(function() {
+                    context.nextTick(function () {
                         //Some defines could have been added since the
                         //require call, collect them.
                         intakeDefines();
@@ -1468,7 +1479,7 @@ var cubx = {
                      * *Requires* the use of a module name. It does not support using
                      * plain URLs like nameToUrl.
                      */
-                    toUrl: function(moduleNamePlusExt) {
+                    toUrl: function (moduleNamePlusExt) {
                         var ext,
                             index = moduleNamePlusExt.lastIndexOf('.'),
                             segment = moduleNamePlusExt.split('/')[0],
@@ -1482,14 +1493,14 @@ var cubx = {
                         }
 
                         return context.nameToUrl(normalize(moduleNamePlusExt,
-                            relMap && relMap.id, true), ext, true);
+                                                relMap && relMap.id, true), ext,  true);
                     },
 
-                    defined: function(id) {
+                    defined: function (id) {
                         return hasProp(defined, makeModuleMap(id, relMap, false, true).id);
                     },
 
-                    specified: function(id) {
+                    specified: function (id) {
                         id = makeModuleMap(id, relMap, false, true).id;
                         return hasProp(defined, id) || hasProp(registry, id);
                     }
@@ -1497,7 +1508,7 @@ var cubx = {
 
                 //Only allow undef on top level require calls
                 if (!relMap) {
-                    localRequire.undef = function(id) {
+                    localRequire.undef = function (id) {
                         //Bind any waiting define() calls to this context,
                         //fix for #408
                         takeGlobalQueue();
@@ -1544,7 +1555,7 @@ var cubx = {
              * is passed in for context, when this method is overridden by
              * the optimizer. Not shown here to keep code compact.
              */
-            enable: function(depMap) {
+            enable: function (depMap) {
                 var mod = getOwn(registry, depMap.id);
                 if (mod) {
                     getModule(depMap).enable();
@@ -1557,7 +1568,7 @@ var cubx = {
              * load call.
              * @param {String} moduleName the name of the module to potentially complete.
              */
-            completeLoad: function(moduleName) {
+            completeLoad: function (moduleName) {
                 var found, args, mod,
                     shim = getOwn(config.shim, moduleName) || {},
                     shExports = shim.exports;
@@ -1594,9 +1605,9 @@ var cubx = {
                             return;
                         } else {
                             return onError(makeError('nodefine',
-                                'No define call for ' + moduleName,
-                                null,
-                                [moduleName]));
+                                             'No define call for ' + moduleName,
+                                             null,
+                                             [moduleName]));
                         }
                     } else {
                         //A script that does not call define(), so just simulate
@@ -1615,7 +1626,7 @@ var cubx = {
              * it is assumed to have already been normalized. This is an
              * internal API, not a public one. Use toUrl for the public API.
              */
-            nameToUrl: function(moduleName, ext, skipExt) {
+            nameToUrl: function (moduleName, ext, skipExt) {
                 var paths, syms, i, parentModule, url,
                     parentPath, bundleId,
                     pkgMain = getOwn(config.pkgs, moduleName);
@@ -1664,18 +1675,17 @@ var cubx = {
 
                     //Join the path parts together, then figure out if baseUrl is needed.
                     url = syms.join('/');
-                    url += (ext || (/^data\:|\?/.test(url) || skipExt ? '' : '.js'));
+                    url += (ext || (/^data\:|^blob\:|\?/.test(url) || skipExt ? '' : '.js'));
                     url = (url.charAt(0) === '/' || url.match(/^[\w\+\.\-]+:/) ? '' : config.baseUrl) + url;
                 }
 
-                return config.urlArgs ? url +
-                ((url.indexOf('?') === -1 ? '?' : '&') +
-                config.urlArgs) : url;
+                return config.urlArgs && !/^blob\:/.test(url) ?
+                       url + config.urlArgs(moduleName, url) : url;
             },
 
             //Delegates to req.load. Broken out as a separate function to
             //allow overriding in the optimizer.
-            load: function(id, url) {
+            load: function (id, url) {
                 req.load(context, id, url);
             },
 
@@ -1686,7 +1696,7 @@ var cubx = {
              *
              * @private
              */
-            execCb: function(name, callback, args, exports) {
+            execCb: function (name, callback, args, exports) {
                 return callback.apply(exports, args);
             },
 
@@ -1696,12 +1706,12 @@ var cubx = {
              * @param {Event} evt the event from the browser for the script
              * that was loaded.
              */
-            onScriptLoad: function(evt) {
+            onScriptLoad: function (evt) {
                 //Using currentTarget instead of target for Firefox 2.0's sake. Not
                 //all old browsers will be supported, but this one was easy enough
                 //to support and still makes sense.
                 if (evt.type === 'load' ||
-                    (readyRegExp.test((evt.currentTarget || evt.srcElement).readyState))) {
+                        (readyRegExp.test((evt.currentTarget || evt.srcElement).readyState))) {
                     //Reset interactive script so a script node is not held onto for
                     //to long.
                     interactiveScript = null;
@@ -1715,10 +1725,24 @@ var cubx = {
             /**
              * Callback for script errors.
              */
-            onScriptError: function(evt) {
+            onScriptError: function (evt) {
                 var data = getScriptData(evt);
                 if (!hasPathFallback(data.id)) {
-                    return onError(makeError('scripterror', 'Script error for: ' + data.id, evt, [data.id]));
+                    var parents = [];
+                    eachProp(registry, function(value, key) {
+                        if (key.indexOf('_@r') !== 0) {
+                            each(value.depMaps, function(depMap) {
+                                if (depMap.id === data.id) {
+                                    parents.push(key);
+                                    return true;
+                                }
+                            });
+                        }
+                    });
+                    return onError(makeError('scripterror', 'Script error for "' + data.id +
+                                             (parents.length ?
+                                             '", needed by: ' + parents.join(', ') :
+                                             '"'), evt, [data.id]));
                 }
             }
         };
@@ -1781,7 +1805,7 @@ var cubx = {
      * Support require.config() to make it easier to cooperate with other
      * AMD loaders on globally agreed names.
      */
-    req.config = function(config) {
+    req.config = function (config) {
         return req(config);
     };
 
@@ -1791,11 +1815,9 @@ var cubx = {
      * that have a better solution than setTimeout.
      * @param  {Function} fn function to execute later.
      */
-    req.nextTick = typeof setTimeout !== 'undefined' ? function(fn) {
+    req.nextTick = typeof setTimeout !== 'undefined' ? function (fn) {
         setTimeout(fn, 4);
-    } : function(fn) {
-        fn();
-    };
+    } : function (fn) { fn(); };
 
     /**
      * Export require as a global, but only if it does not already exist.
@@ -1823,11 +1845,11 @@ var cubx = {
         'undef',
         'defined',
         'specified'
-    ], function(prop) {
+    ], function (prop) {
         //Reference from contexts instead of early binding to default context,
         //so that during builds, the latest instance of the default context
         //with its config gets used.
-        req[prop] = function() {
+        req[prop] = function () {
             var ctx = contexts[defContextName];
             return ctx.require[prop].apply(ctx, arguments);
         };
@@ -1854,10 +1876,10 @@ var cubx = {
     /**
      * Creates the node for the load command. Only used in browser envs.
      */
-    req.createNode = function(config, moduleName, url) {
+    req.createNode = function (config, moduleName, url) {
         var node = config.xhtml ?
-                   document.createElementNS('http://www.w3.org/1999/xhtml', 'html:script') :
-                   document.createElement('script');
+                document.createElementNS('http://www.w3.org/1999/xhtml', 'html:script') :
+                document.createElement('script');
         node.type = config.scriptType || 'text/javascript';
         node.charset = 'utf-8';
         node.async = true;
@@ -1873,15 +1895,12 @@ var cubx = {
      * @param {String} moduleName the name of the module.
      * @param {Object} url the URL to the module.
      */
-    req.load = function(context, moduleName, url) {
+    req.load = function (context, moduleName, url) {
         var config = (context && context.config) || {},
             node;
         if (isBrowser) {
             //In the browser so use a script tag
             node = req.createNode(config, moduleName, url);
-            if (config.onNodeCreated) {
-                config.onNodeCreated(node, config, moduleName, url);
-            }
 
             node.setAttribute('data-requirecontext', context.contextName);
             node.setAttribute('data-requiremodule', moduleName);
@@ -1892,16 +1911,18 @@ var cubx = {
             //addEventListener support, which fire the onload event for a
             //script right after the script execution. See:
             //https://connect.microsoft.com/IE/feedback/details/648057/script-onload-event-is-not-fired-immediately-after-script-execution
-            // UNFORTUNATELY Opera implements attachEvent but does not follow the script script execution mode.
+            //UNFORTUNATELY Opera implements attachEvent but does not follow the script
+            //script execution mode.
             if (node.attachEvent &&
                     //Check if node.attachEvent is artificially added by custom script or
                     //natively supported by browser
-                    //read https://github.com/jrburke/requirejs/issues/187
+                    //read https://github.com/requirejs/requirejs/issues/187
                     //if we can NOT find [native code] then it must NOT natively supported.
                     //in IE8, node.attachEvent does not have toString()
                     //Note the test for "[native code" with no closing brace, see:
-                    //https://github.com/jrburke/requirejs/issues/273
-                !(node.attachEvent.toString && node.attachEvent.toString().indexOf('[native code') < 0) && !isOpera) {
+                    //https://github.com/requirejs/requirejs/issues/273
+                    !(node.attachEvent.toString && node.attachEvent.toString().indexOf('[native code') < 0) &&
+                    !isOpera) {
                 //Probably IE. IE (at least 6-8) do not fire
                 //script onload right after executing the script, so
                 //we cannot tie the anonymous define call to a name.
@@ -1927,6 +1948,12 @@ var cubx = {
             }
             node.src = url;
 
+            //Calling onNodeCreated after all properties on the node have been
+            //set, but before it is placed in the DOM.
+            if (config.onNodeCreated) {
+                config.onNodeCreated(node, config, moduleName, url);
+            }
+
             //For some cache cases in IE 6-8, the script executes before the end
             //of the appendChild execution, so to tie an anonymous define
             //call to the module name (which is stored on the node), hold on
@@ -1945,19 +1972,24 @@ var cubx = {
                 //In a web worker, use importScripts. This is not a very
                 //efficient use of importScripts, importScripts will block until
                 //its script is downloaded and evaluated. However, if web workers
-                //are in play, the expectation that a build has been done so that
-                //only one script needs to be loaded anyway. This may need to be
-                //reevaluated if other use cases become common.
+                //are in play, the expectation is that a build has been done so
+                //that only one script needs to be loaded anyway. This may need
+                //to be reevaluated if other use cases become common.
+
+                // Post a task to the event loop to work around a bug in WebKit
+                // where the worker gets garbage-collected after calling
+                // importScripts(): https://webkit.org/b/153317
+                setTimeout(function() {}, 0);
                 importScripts(url);
 
                 //Account for anonymous modules
                 context.completeLoad(moduleName);
             } catch (e) {
                 context.onError(makeError('importscripts',
-                    'importScripts failed for ' +
-                    moduleName + ' at ' + url,
-                    e,
-                    [moduleName]));
+                                'importScripts failed for ' +
+                                    moduleName + ' at ' + url,
+                                e,
+                                [moduleName]));
             }
         }
     };
@@ -1967,7 +1999,7 @@ var cubx = {
             return interactiveScript;
         }
 
-        eachReverse(scripts(), function(script) {
+        eachReverse(scripts(), function (script) {
             if (script.readyState === 'interactive') {
                 return (interactiveScript = script);
             }
@@ -1978,7 +2010,7 @@ var cubx = {
     //Look for a data-main script attribute, which could also adjust the baseUrl.
     if (isBrowser && !cfg.skipDataMain) {
         //Figure out baseUrl. Get it from the script tag with require.js in it.
-        eachReverse(scripts(), function(script) {
+        eachReverse(scripts(), function (script) {
             //Set the 'head' where we can append children by
             //using the script's parent.
             if (!head) {
@@ -1993,13 +2025,15 @@ var cubx = {
                 //Preserve dataMain in case it is a path (i.e. contains '?')
                 mainScript = dataMain;
 
-                //Set final baseUrl if there is not already an explicit one.
-                if (!cfg.baseUrl) {
+                //Set final baseUrl if there is not already an explicit one,
+                //but only do so if the data-main value is not a loader plugin
+                //module ID.
+                if (!cfg.baseUrl && mainScript.indexOf('!') === -1) {
                     //Pull off the directory of data-main for use as the
                     //baseUrl.
                     src = mainScript.split('/');
                     mainScript = src.pop();
-                    subPath = src.length ? src.join('/') + '/' : './';
+                    subPath = src.length ? src.join('/')  + '/' : './';
 
                     cfg.baseUrl = subPath;
                 }
@@ -2055,8 +2089,8 @@ var cubx = {
             if (callback.length) {
                 callback
                     .toString()
-                    .replace(commentRegExp, '')
-                    .replace(cjsRequireRegExp, function(match, dep) {
+                    .replace(commentRegExp, commentReplace)
+                    .replace(cjsRequireRegExp, function (match, dep) {
                         deps.push(dep);
                     });
 
@@ -2104,7 +2138,7 @@ var cubx = {
      * loader plugins, not for plain JS modules.
      * @param {String} text the text to execute/evaluate.
      */
-    req.exec = function(text) {
+    req.exec = function (text) {
         /*jslint evil: true */
         return eval(text);
     };
