@@ -1,25 +1,30 @@
 /** vim: et:ts=4:sw=4:sts=4
- *
  * Modified the original sources from https://github.com/requirejs/r.js for cubbes platform
+ * Released under MIT license
+ *
+ * origin COde:
+ * @license RequireJS 2.3.5 Copyright jQuery Foundation and other contributors.
+ * Released under MIT license, https://github.com/requirejs/requirejs/blob/master/LICENSE
  */
 //Not using strict: uneven strict support in browsers, #392, and causes
 //problems with requirejs.exec()/transpiler plugins that may not be strict.
 /*jslint regexp: true, nomen: true, sloppy: true */
 /*global window, navigator, document, importScripts, setTimeout, opera */
 
+
 var cubx = {
 
-    amd: {
-        requirejs: undefined,
-        require: undefined,
-        define: undefined
-    }
+  amd: {
+    requirejs: undefined,
+    require: undefined,
+    define: undefined
+  }
 };
-(function (global) {
+(function (global, setTimeout) {
     var req, s, head, baseElement, dataMain, src,
         interactiveScript, currentlyAddingScript, mainScript, subPath,
-        version = '2.2.0',
-        commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg,
+        version = '2.3.5',
+        commentRegExp = /\/\*[\s\S]*?\*\/|([^:"'=]|^)\/\/.*$/mg,
         cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
         jsSuffixRegExp = /\.js$/,
         currDirRegExp = /^\.\//,
@@ -43,7 +48,7 @@ var cubx = {
         useInteractive = false;
 
     //Could match something like ')//comment', do not lose the prefix to comment.
-    function commentReplace(match, multi, multiText, singlePrefix) {
+    function commentReplace(match, singlePrefix) {
         return singlePrefix || '';
     }
 
@@ -188,19 +193,19 @@ var cubx = {
     }
 
     if (typeof cubx.amd.requirejs !== 'undefined') {
-        if (isFunction(window.cubx.amd.requirejs)) {
+        if (isFunction(cubx.amd.requirejs)) {
             //Do not overwrite an existing requirejs instance.
             return;
         }
         cfg = cubx.amd.requirejs;
-        cubx.amd.requirejs = undefined;
+      cubx.amd.requirejs = undefined;
     }
 
     //Allow for a require config object
     if (typeof cubx.amd.require !== 'undefined' && !isFunction(cubx.amd.require)) {
         //assume it is a config object.
         cfg = cubx.amd.require;
-        cubx.amd.require = undefined;
+      cubx.amd.require = undefined;
     }
 
     function newContext(contextName) {
@@ -447,7 +452,9 @@ var cubx = {
             //Account for relative paths if there is a base name.
             if (name) {
                 if (prefix) {
-                    if (pluginModule && pluginModule.normalize) {
+                    if (isNormalized) {
+                        normalizedName = name;
+                    } else if (pluginModule && pluginModule.normalize) {
                         //Plugin is loaded, use its normalize method.
                         normalizedName = pluginModule.normalize(name, function (name) {
                             return normalize(name, parentName, applyMap);
@@ -979,7 +986,8 @@ var cubx = {
                         //prefix and name should already be normalized, no need
                         //for applying map config again either.
                         normalizedMap = makeModuleMap(map.prefix + '!' + name,
-                                                      this.map.parentMap);
+                                                      this.map.parentMap,
+                                                      true);
                         on(normalizedMap,
                             'defined', bind(this, function (value) {
                                 this.map.normalizedMap = normalizedMap;
@@ -1765,7 +1773,7 @@ var cubx = {
      * on a require that are not standardized), and to give a short
      * name for minification/local scope use.
      */
-    req = cubx.amd.requirejs = function(deps, callback, errback, optional) {
+    req = cubx.amd.requirejs = function (deps, callback, errback, optional) {
 
         //Find the right context, use default
         var context, config,
@@ -1823,7 +1831,7 @@ var cubx = {
      * Export require as a global, but only if it does not already exist.
      */
     if (!cubx.amd.require) {
-        cubx.amd.require = req;
+      cubx.amd.require = req;
     }
 
     req.version = version;
@@ -2062,7 +2070,7 @@ var cubx = {
      * return a value to define the module corresponding to the first argument's
      * name.
      */
-    cubx.amd.define = function(name, deps, callback) {
+    cubx.amd.define = function (name, deps, callback) {
         var node, context;
 
         //Allow for anonymous modules
@@ -2128,7 +2136,8 @@ var cubx = {
             globalDefQueue.push([name, deps, callback]);
         }
     };
-    cubx.amd.define.amd = {
+
+  cubx.amd.define.amd = {
         jQuery: true
     };
 
@@ -2145,4 +2154,4 @@ var cubx = {
 
     //Set up with config info.
     req(cfg);
-}(this));
+}(this, (typeof setTimeout === 'undefined' ? undefined : setTimeout)));
